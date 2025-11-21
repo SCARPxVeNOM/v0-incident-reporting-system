@@ -5,8 +5,9 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Shield } from "lucide-react"
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -40,22 +41,26 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sidebar to-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 shadow-lg border border-sidebar-border">
-        <div className="space-y-6">
-          <div className="space-y-2 text-center">
-            <h1 className="text-2xl font-bold text-sidebar-primary">Admin Access</h1>
-            <p className="text-sm text-muted-foreground">Manage incidents and technicians</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md border-border bg-card shadow-xl">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="h-12 w-12 rounded-full bg-secondary/10 flex items-center justify-center">
+              <Shield className="h-6 w-6 text-secondary" />
+            </div>
           </div>
-
+          <CardTitle className="text-2xl font-bold tracking-tight text-primary">Admin Access</CardTitle>
+          <CardDescription>Enter your credentials to access the dashboard</CardDescription>
+        </CardHeader>
+        <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 bg-destructive/10 border border-destructive text-destructive text-sm rounded-md">
+              <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-md text-center">
                 {error}
               </div>
             )}
 
-            <div>
+            <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Email</label>
               <Input
                 type="email"
@@ -63,12 +68,12 @@ export default function AdminLoginPage() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="mt-1"
+                className="bg-background border-input focus:border-secondary focus:ring-secondary"
                 placeholder="admin@campus.com"
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Password</label>
               <Input
                 type="password"
@@ -76,7 +81,7 @@ export default function AdminLoginPage() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="mt-1"
+                className="bg-background border-input focus:border-secondary focus:ring-secondary"
                 placeholder="••••••••"
               />
             </div>
@@ -84,18 +89,22 @@ export default function AdminLoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 shadow-lg shadow-primary/20"
             >
-              {loading ? "Signing in..." : "Admin Sign In"}
+              {loading ? "Authenticating..." : "Sign In"}
             </Button>
           </form>
 
-          <div className="text-center">
-            <Button variant="ghost" onClick={() => router.push("/")} className="text-sm">
-              Back to Home
+          <div className="mt-6 text-center">
+            <Button
+              variant="link"
+              onClick={() => router.push("/")}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              Return to Campus Portal
             </Button>
           </div>
-        </div>
+        </CardContent>
       </Card>
     </div>
   )

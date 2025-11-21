@@ -47,43 +47,63 @@ export default function SLAMonitor() {
   const getStatusColor = (status: "ok" | "warning" | "critical") => {
     switch (status) {
       case "ok":
-        return "bg-chart-3/20 text-chart-3"
+        return "bg-green-500/10 text-green-500 border-green-500/20"
       case "warning":
-        return "bg-accent/20 text-accent"
+        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
       case "critical":
-        return "bg-destructive/20 text-destructive"
+        return "bg-red-500/10 text-red-500 border-red-500/20"
     }
   }
 
   return (
-    <Card className="p-6">
-      <h2 className="text-lg font-semibold text-foreground mb-4">SLA Monitoring (15 min target)</h2>
-      <div className="space-y-3">
-        {slaStatuses.length === 0 ? (
-          <p className="text-muted-foreground text-sm">All incidents within SLA</p>
-        ) : (
-          slaStatuses.map((sla) => (
-            <div key={sla.incident_id} className="p-3 border border-border rounded-md">
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-medium text-foreground text-sm">{sla.title}</p>
-                <span className={`text-xs px-2 py-1 rounded font-medium ${getStatusColor(sla.status)}`}>
-                  {sla.status.toUpperCase()}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground mb-2">
-                {sla.time_since_creation} / {sla.sla_minutes} minutes
-              </p>
-              <div className="w-full bg-muted rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-colors ${
-                    sla.status === "critical" ? "bg-destructive" : sla.status === "warning" ? "bg-accent" : "bg-chart-3"
-                  }`}
-                  style={{ width: `${sla.percentage_used}%` }}
-                />
-              </div>
+    <Card>
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-lg font-semibold text-foreground">SLA Monitoring</h2>
+          <span className="text-xs text-muted-foreground border border-border px-2 py-1 rounded-md">
+            Target: 15 min
+          </span>
+        </div>
+
+        <div className="space-y-3">
+          {slaStatuses.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm border border-dashed border-border rounded-md">
+              All incidents within SLA limits
             </div>
-          ))
-        )}
+          ) : (
+            slaStatuses.map((sla) => (
+              <div
+                key={sla.incident_id}
+                className="p-4 border border-border rounded-md bg-card hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <p className="font-medium text-foreground text-sm">{sla.title}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full border ${getStatusColor(sla.status)}`}>
+                    {sla.status.toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                  <span>Time Elapsed</span>
+                  <span>
+                    {sla.time_since_creation} / {sla.sla_minutes} min
+                  </span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      sla.status === "critical"
+                        ? "bg-red-500"
+                        : sla.status === "warning"
+                          ? "bg-yellow-500"
+                          : "bg-green-500"
+                    }`}
+                    style={{ width: `${sla.percentage_used}%` }}
+                  />
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </Card>
   )
