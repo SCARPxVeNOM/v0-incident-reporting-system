@@ -16,7 +16,29 @@ export default function SLAMonitor() {
   const [slaStatuses, setSLAStatuses] = useState<SLAStatus[]>([])
 
   useEffect(() => {
-    const incidents = JSON.parse(localStorage.getItem("incidents") || "[]")
+    fetchIncidents()
+  }, [])
+
+  const fetchIncidents = async () => {
+    try {
+      const response = await fetch("/api/incidents")
+      if (response.ok) {
+        const incidents = await response.json()
+        calculateSLA(incidents)
+      } else {
+        // Fallback to localStorage
+        const incidents = JSON.parse(localStorage.getItem("incidents") || "[]")
+        calculateSLA(incidents)
+      }
+    } catch (error) {
+      console.error("Error fetching incidents:", error)
+      // Fallback to localStorage
+      const incidents = JSON.parse(localStorage.getItem("incidents") || "[]")
+      calculateSLA(incidents)
+    }
+  }
+
+  const calculateSLA = (incidents: any[]) => {
     const slaMinutes = 15
 
     const statuses = incidents
@@ -42,7 +64,7 @@ export default function SLAMonitor() {
       })
 
     setSLAStatuses(statuses)
-  }, [])
+  }
 
   const getStatusColor = (status: "ok" | "warning" | "critical") => {
     switch (status) {

@@ -13,19 +13,55 @@ export default function AnalyticsOverview() {
   })
 
   useEffect(() => {
-    const incidents = JSON.parse(localStorage.getItem("incidents") || "[]")
-
-    const total = incidents.length
-    const active = incidents.filter((i: any) => i.status === "in-progress" || i.status === "new").length
-    const resolved = incidents.filter((i: any) => i.status === "resolved").length
-
-    setStats({
-      total,
-      active,
-      resolved,
-      avgResponseTime: active > 0 ? Math.floor(Math.random() * 30) + 5 : 0,
-    })
+    fetchIncidents()
   }, [])
+
+  const fetchIncidents = async () => {
+    try {
+      const response = await fetch("/api/incidents")
+      if (response.ok) {
+        const incidents = await response.json()
+
+        const total = incidents.length
+        const active = incidents.filter((i: any) => i.status === "in-progress" || i.status === "new").length
+        const resolved = incidents.filter((i: any) => i.status === "resolved").length
+
+        setStats({
+          total,
+          active,
+          resolved,
+          avgResponseTime: active > 0 ? Math.floor(Math.random() * 30) + 5 : 0,
+        })
+      } else {
+        // Fallback to localStorage
+        const incidents = JSON.parse(localStorage.getItem("incidents") || "[]")
+        const total = incidents.length
+        const active = incidents.filter((i: any) => i.status === "in-progress" || i.status === "new").length
+        const resolved = incidents.filter((i: any) => i.status === "resolved").length
+
+        setStats({
+          total,
+          active,
+          resolved,
+          avgResponseTime: active > 0 ? Math.floor(Math.random() * 30) + 5 : 0,
+        })
+      }
+    } catch (error) {
+      console.error("Error fetching incidents:", error)
+      // Fallback to localStorage
+      const incidents = JSON.parse(localStorage.getItem("incidents") || "[]")
+      const total = incidents.length
+      const active = incidents.filter((i: any) => i.status === "in-progress" || i.status === "new").length
+      const resolved = incidents.filter((i: any) => i.status === "resolved").length
+
+      setStats({
+        total,
+        active,
+        resolved,
+        avgResponseTime: active > 0 ? Math.floor(Math.random() * 30) + 5 : 0,
+      })
+    }
+  }
 
   const cards = [
     {

@@ -32,12 +32,34 @@ export default function AdminDashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("incidents") || "[]")
-    setIncidents(stored)
-
-    const predictionData = generatePredictions(stored)
-    setPredictions(predictionData)
+    fetchIncidents()
   }, [])
+
+  const fetchIncidents = async () => {
+    try {
+      const response = await fetch("/api/incidents")
+      if (response.ok) {
+        const data = await response.json()
+        setIncidents(data)
+        const predictionData = generatePredictions(data)
+        setPredictions(predictionData)
+      } else {
+        console.error("Failed to fetch incidents")
+        // Fallback to localStorage for backward compatibility
+        const stored = JSON.parse(localStorage.getItem("incidents") || "[]")
+        setIncidents(stored)
+        const predictionData = generatePredictions(stored)
+        setPredictions(predictionData)
+      }
+    } catch (error) {
+      console.error("Error fetching incidents:", error)
+      // Fallback to localStorage
+      const stored = JSON.parse(localStorage.getItem("incidents") || "[]")
+      setIncidents(stored)
+      const predictionData = generatePredictions(stored)
+      setPredictions(predictionData)
+    }
+  }
 
   const generatePredictions = (incidentData: any[]) => {
     const locationMap: Record<string, number> = {}
@@ -63,12 +85,34 @@ export default function AdminDashboardPage() {
     router.push("/")
   }
 
-  const updateIncidentStatus = (id: string, newStatus: string) => {
-    const updated = incidents.map((inc) =>
-      inc.id === id ? { ...inc, status: newStatus, updated_at: new Date().toISOString() } : inc,
-    )
-    setIncidents(updated)
-    localStorage.setItem("incidents", JSON.stringify(updated))
+  const updateIncidentStatus = async (id: string, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/incidents/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      if (response.ok) {
+        // Refresh incidents from database
+        fetchIncidents()
+      } else {
+        // Fallback to local update
+        const updated = incidents.map((inc) =>
+          inc.id === id ? { ...inc, status: newStatus, updated_at: new Date().toISOString() } : inc,
+        )
+        setIncidents(updated)
+        localStorage.setItem("incidents", JSON.stringify(updated))
+      }
+    } catch (error) {
+      console.error("Error updating incident:", error)
+      // Fallback to local update
+      const updated = incidents.map((inc) =>
+        inc.id === id ? { ...inc, status: newStatus, updated_at: new Date().toISOString() } : inc,
+      )
+      setIncidents(updated)
+      localStorage.setItem("incidents", JSON.stringify(updated))
+    }
   }
 
   const navItems = [

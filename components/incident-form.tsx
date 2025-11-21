@@ -2,7 +2,8 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { MapPin, Upload, Loader2, Send } from "lucide-react"
@@ -13,6 +14,7 @@ interface IncidentFormProps {
 }
 
 export default function IncidentForm({ onSubmit, onSuccess }: IncidentFormProps) {
+  const { data: session } = useSession()
   const [formData, setFormData] = useState({
     title: "",
     category: "water",
@@ -25,6 +27,27 @@ export default function IncidentForm({ onSubmit, onSuccess }: IncidentFormProps)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Store user data from session if available (for Google OAuth users)
+  useEffect(() => {
+    if (session?.user?.id) {
+      localStorage.setItem("user", JSON.stringify({
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        role: session.user.role,
+      }))
+    }
+  }, [session])
+
+  // Get user ID - prioritize session (OAuth) over localStorage (email/password)
+  const getUserId = () => {
+    if (session?.user?.id) {
+      return session.user.id
+    }
+    const userData = JSON.parse(localStorage.getItem("user") || "{}")
+    return userData.id
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData((prev) => ({
@@ -69,37 +92,50 @@ export default function IncidentForm({ onSubmit, onSuccess }: IncidentFormProps)
       return
     }
 
-    // Check for duplicate incidents
-    const existingIncidents = JSON.parse(localStorage.getItem("incidents") || "[]")
-    const isDuplicate = existingIncidents.some(
-      (inc: any) =>
-        inc.category === formData.category &&
-        inc.location === formData.location &&
-        new Date(inc.created_at).toDateString() === new Date().toDateString(),
-    )
+    // Get user ID from session (Google OAuth) or localStorage (email/password)
+    const userId = getUserId()
 
-    if (isDuplicate) {
-      setError("An incident for this category and location already exists today")
+    if (!userId) {
+      setError("Please log in to report an incident")
       setLoading(false)
       return
     }
 
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      const incident = {
-        id: Math.random().toString(36).substr(2, 9),
-        ...formData,
-        image_url: imageFile ? URL.createObjectURL(imageFile) : null,
-        status: "new",
-        priority: 1,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+      // Handle image upload (convert to base64 or upload to storage)
+      let imageUrl = null
+      if (imageFile) {
+        // For now, convert to base64 (in production, upload to cloud storage)
+        const reader = new FileReader()
+        imageUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(imageFile)
+        })
       }
 
-      existingIncidents.push(incident)
-      localStorage.setItem("incidents", JSON.stringify(existingIncidents))
+      // Save to MongoDB via API
+      const response = await fetch("/api/incidents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          title: formData.title,
+          category: formData.category,
+          description: formData.description,
+          location: formData.location,
+          latitude: formData.latitude || null,
+          longitude: formData.longitude || null,
+          image_url: imageUrl,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to create incident")
+      }
+
+      const incident = await response.json()
 
       if (onSubmit) {
         onSubmit(incident)

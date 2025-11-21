@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { MapPin, Calendar, ArrowRight, FileText } from "lucide-react"
+import IncidentDetailModal from "@/components/incident-detail-modal"
 
 interface Incident {
   id: string
@@ -22,11 +23,45 @@ interface IncidentListProps {
 export default function IncidentList({ userOnly = false }: IncidentListProps) {
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [filter, setFilter] = useState("all")
+  const [loading, setLoading] = useState(true)
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("incidents") || "[]")
-    setIncidents(stored)
-  }, [])
+    fetchIncidents()
+  }, [userOnly])
+
+  const fetchIncidents = async () => {
+    try {
+      setLoading(true)
+      // Get user ID if userOnly is true
+      const userData = JSON.parse(localStorage.getItem("user") || "{}")
+      const userId = userData.id
+
+      let url = "/api/incidents"
+      if (userOnly && userId) {
+        url += `?userId=${userId}`
+      }
+
+      const response = await fetch(url)
+      if (response.ok) {
+        const data = await response.json()
+        setIncidents(data)
+      } else {
+        console.error("Failed to fetch incidents")
+        // Fallback to localStorage for backward compatibility
+        const stored = JSON.parse(localStorage.getItem("incidents") || "[]")
+        setIncidents(stored)
+      }
+    } catch (error) {
+      console.error("Error fetching incidents:", error)
+      // Fallback to localStorage
+      const stored = JSON.parse(localStorage.getItem("incidents") || "[]")
+      setIncidents(stored)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredIncidents = incidents.filter((incident) => {
     if (filter === "all") return true
@@ -80,7 +115,14 @@ export default function IncidentList({ userOnly = false }: IncidentListProps) {
       </div>
 
       <div className="space-y-4">
-        {filteredIncidents.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <FileText className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-medium text-foreground">Loading incidents...</h3>
+          </div>
+        ) : filteredIncidents.length === 0 ? (
           <div className="text-center py-16 bg-muted/30 rounded-2xl border border-dashed border-border">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
               <FileText className="w-8 h-8 text-muted-foreground" />
@@ -148,7 +190,13 @@ export default function IncidentList({ userOnly = false }: IncidentListProps) {
                     })}
                   </div>
 
-                  <button className="text-sm font-medium text-primary flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-[-10px] group-hover:translate-x-0">
+                  <button
+                    onClick={() => {
+                      setSelectedIncidentId(incident.id)
+                      setIsModalOpen(true)
+                    }}
+                    className="text-sm font-medium text-primary flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-[-10px] group-hover:translate-x-0"
+                  >
                     View Details <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -157,6 +205,15 @@ export default function IncidentList({ userOnly = false }: IncidentListProps) {
           ))
         )}
       </div>
+
+      <IncidentDetailModal
+        incidentId={selectedIncidentId}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          setSelectedIncidentId(null)
+        }}
+      />
     </Card>
   )
 }
