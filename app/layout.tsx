@@ -9,8 +9,8 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Campus Complaint Management System",
-  description: "Report and track campus incidents with real-time dashboards and predictive alerts",
+  title: "Hawkeye - AI-Powered Incident Tracking & Predictive Analytics",
+  description: "Leverage data to anticipate equipment failures, optimize maintenance schedules, and minimize downtime with our intelligent system",
   generator: "v0.app",
   icons: {
     icon: [

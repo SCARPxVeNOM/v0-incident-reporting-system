@@ -25,9 +25,11 @@ interface Incident {
 interface IncidentListProps {
   userOnly?: boolean
   showUpdates?: boolean
+  hideTitle?: boolean
+  hideFilters?: boolean
 }
 
-export default function IncidentList({ userOnly = false, showUpdates = false }: IncidentListProps) {
+export default function IncidentList({ userOnly = false, showUpdates = false, hideTitle = false, hideFilters = false }: IncidentListProps) {
   const { data: session } = useSession()
   const [incidents, setIncidents] = useState<Incident[]>([])
   const [filter, setFilter] = useState("all")
@@ -173,30 +175,40 @@ export default function IncidentList({ userOnly = false, showUpdates = false }: 
     return styles[status] || "bg-slate-500 text-white"
   }
 
-  return (
-    <Card className="p-8 shadow-lg border-none bg-card">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">{userOnly ? "My Reported Issues" : "All Incidents"}</h2>
-          <p className="text-muted-foreground mt-1">Track and manage your complaints</p>
-        </div>
+  const filterButtons = (
+    <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+      {["all", "new", "in-progress", "resolved", "closed"].map((status) => (
+        <button
+          key={status}
+          onClick={() => setFilter(status)}
+          className={`px-4 py-2 text-sm rounded-lg font-medium transition-all duration-200 whitespace-nowrap ${
+            filter === status
+              ? "bg-blue-600 text-white shadow-sm"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+          }`}
+        >
+          {status === "all" ? "All" : status === "in-progress" ? "In progress" : status.charAt(0).toUpperCase() + status.slice(1).replace("-", " ")}
+        </button>
+      ))}
+    </div>
+  )
 
-        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-          {["all", "new", "in-progress", "resolved", "closed"].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-2 text-sm rounded-full font-medium transition-all duration-200 whitespace-nowrap ${
-                filter === status
-                  ? "bg-primary text-primary-foreground shadow-md transform scale-105"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-              }`}
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1).replace("-", " ")}
-            </button>
-          ))}
+  const mainContent = (
+    <>
+      {!hideTitle && (
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">{userOnly ? "My Reported Issues" : "All Incidents"}</h2>
+            <p className="text-muted-foreground mt-1">Track and manage your complaints</p>
+          </div>
+          {!hideFilters && filterButtons}
         </div>
-      </div>
+      )}
+      {hideTitle && !hideFilters && (
+        <div className="mb-6 flex justify-end">
+          {filterButtons}
+        </div>
+      )}
 
       <div className="space-y-4">
         {loading ? (
@@ -384,6 +396,16 @@ export default function IncidentList({ userOnly = false, showUpdates = false }: 
           <IncidentUpdates incidentId={selectedIncidentId} />
         </div>
       )}
+    </>
+  )
+
+  if (hideTitle) {
+    return mainContent
+  }
+
+  return (
+    <Card className="p-8 shadow-lg border-none bg-card">
+      {mainContent}
     </Card>
   )
 }

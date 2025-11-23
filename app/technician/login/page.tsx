@@ -3,9 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import Image from "next/image"
 import { Wrench } from "lucide-react"
 
 export default function TechnicianLoginPage() {
@@ -53,73 +51,106 @@ export default function TechnicianLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-border bg-card shadow-xl">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Wrench className="h-6 w-6 text-primary" />
+    <div className="min-h-screen bg-white flex">
+      {/* Left Side - Content */}
+      <div className="flex-1 flex items-center justify-center p-8 lg:p-12">
+        <div className="w-full max-w-lg">
+          <div className="bg-white p-8">
+            <div className="space-y-6">
+          <div className="space-y-1 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="h-16 w-16 bg-cyan-100 flex items-center justify-center">
+                <Wrench className="h-8 w-8 text-black" />
+              </div>
             </div>
+            <h1 className="text-3xl font-black text-black uppercase tracking-tight">
+              Technician Login
+            </h1>
+            <p className="text-base font-bold text-black">Access your technician dashboard</p>
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight text-primary">
-            Technician Login
-          </CardTitle>
-          <CardDescription>Access your technician dashboard</CardDescription>
-        </CardHeader>
-        <CardContent>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-md text-center">
+              <div className="p-4 bg-red-100 text-black text-sm font-bold">
                 {error}
               </div>
             )}
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Email</label>
-              <Input
+              <label className="text-sm font-black text-black uppercase">Email</label>
+              <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="bg-background border-input focus:border-primary focus:ring-primary"
+                className="w-full h-12 px-4 border-2 border-gray-300 bg-white text-black font-bold focus:outline-none focus:border-cyan-400 focus:bg-cyan-50 transition-colors rounded"
                 placeholder="technician@campus.com"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Password</label>
-              <Input
+              <label className="text-sm font-black text-black uppercase">Password</label>
+              <input
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="bg-background border-input focus:border-primary focus:ring-primary"
+                className="w-full h-12 px-4 border-2 border-gray-300 bg-white text-black font-bold focus:outline-none focus:border-cyan-400 focus:bg-cyan-50 transition-colors rounded"
                 placeholder="••••••••"
               />
             </div>
 
-            <Button
+            <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 shadow-lg shadow-primary/20"
+              className="w-full bg-cyan-400 text-white h-14 text-base font-black uppercase tracking-wide hover:bg-cyan-500 transition-all duration-150 rounded"
             >
               {loading ? "Signing in..." : "Sign In"}
-            </Button>
+            </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <Button
-              variant="link"
+          <div className="mt-6 text-center border-t border-gray-200 pt-4">
+            <button
               onClick={() => router.push("/")}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-black font-black uppercase hover:underline"
             >
-              Return to Campus Portal
-            </Button>
+              ← Return to Main Portal
+            </button>
           </div>
-        </CardContent>
-      </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Image */}
+      <div className="hidden lg:flex flex-1 items-center justify-center p-8 bg-white">
+        <div className="relative w-full h-full max-w-2xl max-h-[90vh] overflow-hidden">
+          <Image
+            src="/funding.webp"
+            alt="Hawkeye Technician"
+            fill
+            className="object-cover wave-animation"
+            priority
+            quality={90}
+          />
+        </div>
+      </div>
+
+      {/* Mobile Image - Show below content on small screens */}
+      <div className="lg:hidden w-full p-8 pt-0">
+        <div className="relative w-full h-64 overflow-hidden">
+          <Image
+            src="/funding.webp"
+            alt="Hawkeye Technician"
+            fill
+            className="object-cover wave-animation"
+            priority
+            quality={90}
+          />
+        </div>
+      </div>
     </div>
   )
 }

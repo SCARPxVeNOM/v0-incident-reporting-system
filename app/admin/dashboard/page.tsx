@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 import AnalyticsOverview from "@/components/analytics-overview"
 import TechnicianScheduler from "@/components/technician-scheduler"
 import SLAMonitor from "@/components/sla-monitor"
@@ -25,7 +26,6 @@ import {
   Clock,
   TrendingUp,
   MoreVertical,
-  Edit,
   Trash2,
   UserCog,
   Ban,
@@ -177,8 +177,16 @@ export default function AdminDashboardPage() {
       >
         <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
           <div className="flex items-center gap-2 font-semibold text-sidebar-primary">
-            <Shield className="h-6 w-6" />
-            {isSidebarOpen && <span>AdminPanel</span>}
+            <div className="relative">
+              <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
+                <Activity className="h-5 w-5 text-white" />
+              </div>
+            </div>
+            {isSidebarOpen && (
+              <div>
+                <div className="text-sm font-bold">SmartMaintain</div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -263,8 +271,43 @@ export default function AdminDashboardPage() {
           <div className="max-w-6xl mx-auto space-y-6">
             {activeTab === "overview" && (
               <div className="space-y-6">
-                <AnalyticsOverview />
-                <CompletedTasks />
+                <div>
+                  <h1 className="text-3xl font-bold text-slate-900 mb-6">Analytics Overview</h1>
+                  <AnalyticsOverview />
+                </div>
+                <Card className="border border-slate-200 bg-white shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="text-2xl font-bold text-slate-900">Recent Alerts</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {incidents
+                        .filter((i: any) => i.status === "new" || i.status === "in-progress" || i.status === "in_progress")
+                        .slice(0, 5)
+                        .map((incident: any) => (
+                          <div key={incident.id} className="p-4 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <p className="text-sm text-slate-500 mb-1">
+                                  {new Date(incident.created_at).toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                  })}
+                                </p>
+                                <p className="text-slate-900 font-medium">
+                                  Open Incident #{incident.id.slice(0, 8)}: {incident.title}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      {incidents.filter((i: any) => i.status === "new" || i.status === "in-progress" || i.status === "in_progress").length === 0 && (
+                        <div className="text-center py-8 text-slate-500">No recent alerts</div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
 
@@ -430,12 +473,8 @@ export default function AdminDashboardPage() {
 function UserActionsMenu({ user }: { user: { name: string; email: string; role: string; status: string } }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-
-  const handleEdit = () => {
-    setIsOpen(false)
-    // TODO: Implement edit user functionality
-    alert(`Edit user: ${user.name}`)
-  }
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 })
 
   const handleChangeRole = () => {
     setIsOpen(false)
@@ -478,9 +517,47 @@ function UserActionsMenu({ user }: { user: { name: string; email: string; role: 
     window.location.href = `mailto:${user.email}`
   }
 
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const updatePosition = () => {
+        if (buttonRef.current) {
+          const buttonRect = buttonRef.current.getBoundingClientRect()
+          const spaceBelow = window.innerHeight - buttonRect.bottom
+          const spaceAbove = buttonRect.top
+          const dropdownHeight = 250 // Approximate height of dropdown
+          
+          // Open upward if there's not enough space below
+          if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+            setDropdownPosition({
+              top: buttonRect.top - dropdownHeight - 4,
+              right: window.innerWidth - buttonRect.right,
+            })
+          } else {
+            setDropdownPosition({
+              top: buttonRect.bottom + 4,
+              right: window.innerWidth - buttonRect.right,
+            })
+          }
+        }
+      }
+      
+      updatePosition()
+      
+      // Update position on scroll or resize
+      window.addEventListener('scroll', updatePosition, true)
+      window.addEventListener('resize', updatePosition)
+      
+      return () => {
+        window.removeEventListener('scroll', updatePosition, true)
+        window.removeEventListener('resize', updatePosition)
+      }
+    }
+  }, [isOpen])
+
   return (
     <div className="relative">
       <Button
+        ref={buttonRef}
         variant="ghost"
         size="sm"
         className="h-8 w-8 p-0"
@@ -491,22 +568,21 @@ function UserActionsMenu({ user }: { user: { name: string; email: string; role: 
         <MoreVertical className="h-4 w-4" />
       </Button>
 
-      {isOpen && (
+      {isOpen && typeof window !== 'undefined' && createPortal(
         <>
           <div
-            className="fixed inset-0 z-[100]"
+            className="fixed inset-0 z-[99998] bg-transparent"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-1 z-[101]">
-            <Card className="w-48 shadow-xl border border-border bg-background">
+          <div 
+            className="fixed z-[99999]" 
+            style={{ 
+              top: `${dropdownPosition.top}px`,
+              right: `${dropdownPosition.right}px`,
+            }}
+          >
+            <Card className="w-48 shadow-2xl border border-border bg-background">
               <div className="p-1">
-                <button
-                  onClick={handleEdit}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors"
-                >
-                  <Edit className="h-4 w-4" />
-                  Edit User
-                </button>
                 <button
                   onClick={handleChangeRole}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors"
@@ -549,7 +625,8 @@ function UserActionsMenu({ user }: { user: { name: string; email: string; role: 
               </div>
             </Card>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   )

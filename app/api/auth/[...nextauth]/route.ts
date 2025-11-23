@@ -27,20 +27,25 @@ export const authOptions: NextAuthOptions = {
           })
 
           if (existingUser) {
-            // Update existing user with Google ID if not already set
-            if (!existingUser.googleId && account?.providerAccountId) {
-              await usersCollection.updateOne(
-                { email: user.email },
-                {
-                  $set: {
-                    googleId: account.providerAccountId,
-                    provider: "google",
-                    avatar: user.image,
-                    updated_at: new Date(),
-                  },
-                }
-              )
+            // Update existing user with Google ID and avatar if not already set, or update avatar if it changed
+            const updateData: any = {
+              updated_at: new Date(),
             }
+            
+            if (!existingUser.googleId && account?.providerAccountId) {
+              updateData.googleId = account.providerAccountId
+              updateData.provider = "google"
+            }
+            
+            // Always update avatar from Google (in case user changed their profile picture)
+            if (user.image) {
+              updateData.avatar = user.image
+            }
+            
+            await usersCollection.updateOne(
+              { email: user.email },
+              { $set: updateData }
+            )
           } else {
             // Create new user from Google account
             const newUser = {
@@ -85,6 +90,7 @@ export const authOptions: NextAuthOptions = {
             token.role = dbUser.role
             token.email = dbUser.email
             token.name = dbUser.name
+            token.avatar = dbUser.avatar || null
           }
         } catch (error) {
           console.error("Error in jwt callback:", error)
@@ -97,6 +103,10 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
+        session.user.name = token.name as string
+        session.user.email = token.email as string
+        session.user.image = token.avatar as string
+        session.user.avatar = token.avatar as string
       }
       return session
     },

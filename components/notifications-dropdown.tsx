@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Bell, Check, X, AlertCircle, User, Calendar, CheckCircle2 } from "lucide-react"
@@ -23,6 +24,8 @@ export default function NotificationsDropdown({ userId }: NotificationsDropdownP
   const [unreadCount, setUnreadCount] = useState(0)
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 })
 
   useEffect(() => {
     if (userId) {
@@ -36,6 +39,31 @@ export default function NotificationsDropdown({ userId }: NotificationsDropdownP
       return () => clearInterval(interval)
     }
   }, [userId])
+
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const updatePosition = () => {
+        if (buttonRef.current) {
+          const buttonRect = buttonRef.current.getBoundingClientRect()
+          setDropdownPosition({
+            top: buttonRect.bottom + 8,
+            right: window.innerWidth - buttonRect.right,
+          })
+        }
+      }
+      
+      updatePosition()
+      
+      // Update position on scroll or resize
+      window.addEventListener('scroll', updatePosition, true)
+      window.addEventListener('resize', updatePosition)
+      
+      return () => {
+        window.removeEventListener('scroll', updatePosition, true)
+        window.removeEventListener('resize', updatePosition)
+      }
+    }
+  }, [isOpen])
 
   const fetchNotifications = async () => {
     try {
@@ -115,6 +143,7 @@ export default function NotificationsDropdown({ userId }: NotificationsDropdownP
   return (
     <div className="relative">
       <Button
+        ref={buttonRef}
         variant="ghost"
         size="icon"
         className="relative"
@@ -128,14 +157,20 @@ export default function NotificationsDropdown({ userId }: NotificationsDropdownP
         )}
       </Button>
 
-      {isOpen && (
+      {isOpen && typeof window !== 'undefined' && createPortal(
         <>
           <div
-            className="fixed inset-0 z-[100]"
+            className="fixed inset-0 z-[99998] bg-transparent"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-2 z-[101]">
-            <Card className="w-96 max-w-[calc(100vw-2rem)] max-h-[500px] overflow-hidden shadow-xl border border-border bg-background">
+          <div 
+            className="fixed z-[99999]" 
+            style={{ 
+              top: `${dropdownPosition.top}px`,
+              right: `${dropdownPosition.right}px`,
+            }}
+          >
+            <Card className="w-96 max-w-[calc(100vw-2rem)] max-h-[500px] overflow-hidden shadow-2xl border border-border bg-background">
               <div className="p-4 border-b border-border flex items-center justify-between bg-card">
                 <h3 className="font-semibold text-foreground">Notifications</h3>
                 {unreadNotifications.length > 0 && (
@@ -197,7 +232,8 @@ export default function NotificationsDropdown({ userId }: NotificationsDropdownP
               </div>
             </Card>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   )

@@ -108,23 +108,27 @@ export default function TechnicianDashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
-      <header className="bg-white border-b border-border shadow-sm">
+      <header className="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <User className="h-6 w-6 text-primary" />
+              <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center">
+                <User className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-foreground">Technician Portal</h1>
-                <p className="text-sm text-muted-foreground">
-                  {user?.name} • {user?.specialization}
+                <h1 className="text-xl font-bold text-white">Technician Portal</h1>
+                <p className="text-sm text-blue-100">
+                  Welcome, {user?.name || 'User'} | Technician ID: {user?.id?.slice(0, 6).toUpperCase() || 'N/A'}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {user?.id && <NotificationsDropdown userId={user.id} />}
-              <Button variant="outline" onClick={handleLogout}>
+              {user?.id && (
+                <div className="relative">
+                  <NotificationsDropdown userId={user.id} />
+                </div>
+              )}
+              <Button variant="ghost" onClick={handleLogout} className="text-white hover:bg-white/10">
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
               </Button>
@@ -136,36 +140,45 @@ export default function TechnicianDashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
+          <Card className="border border-slate-200 bg-white shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Active Assignments</p>
-                  <p className="text-3xl font-bold text-foreground">{activeAssignments.length}</p>
+                  <p className="text-sm text-slate-600 mb-1">Active Assignments</p>
+                  <p className="text-4xl font-bold text-slate-900">{activeAssignments.length}</p>
+                  <p className="text-xs text-slate-500 mt-2 bg-blue-50 text-blue-700 px-2 py-1 rounded-full inline-block">
+                    Updated 5 mins ago
+                  </p>
                 </div>
                 <Clock className="h-8 w-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-slate-200 bg-white shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-3xl font-bold text-foreground">{completedAssignments.length}</p>
+                  <p className="text-sm text-slate-600 mb-1">Completed</p>
+                  <p className="text-4xl font-bold text-green-600">{completedAssignments.length}</p>
+                  <p className="text-xs text-slate-500 mt-2 bg-green-50 text-green-700 px-2 py-1 rounded-full inline-block">
+                    This month
+                  </p>
                 </div>
                 <CheckCircle2 className="h-8 w-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-slate-200 bg-white shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Assignments</p>
-                  <p className="text-3xl font-bold text-foreground">{assignments.length}</p>
+                  <p className="text-sm text-slate-600 mb-1">Total Assignments</p>
+                  <p className="text-4xl font-bold text-slate-700">{assignments.length}</p>
+                  <p className="text-xs text-slate-500 mt-2 bg-slate-50 text-slate-700 px-2 py-1 rounded-full inline-block">
+                    Year to date
+                  </p>
                 </div>
                 <LayoutDashboard className="h-8 w-8 text-purple-500" />
               </div>
@@ -174,99 +187,133 @@ export default function TechnicianDashboardPage() {
         </div>
 
         {/* Active Assignments */}
-        <Card className="mb-8">
+        <Card className="mb-8 border border-slate-200 bg-white shadow-sm">
           <CardHeader>
-            <CardTitle>Active Assignments</CardTitle>
-            <CardDescription>Your current and scheduled tasks</CardDescription>
+            <CardTitle className="text-2xl font-bold text-slate-900">Active Assignments</CardTitle>
+            <CardDescription className="text-slate-600">Your current and scheduled tasks</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="text-center py-8">Loading...</div>
             ) : activeAssignments.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">No active assignments</div>
+              <div className="text-center py-8 text-slate-500">No active assignments</div>
             ) : (
               <div className="space-y-4">
-                {activeAssignments.map((assignment) => (
-                  <div
-                    key={assignment.id}
-                    className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-foreground mb-1">{assignment.incident_title}</h3>
+                {activeAssignments.map((assignment) => {
+                  const priorityColor = 
+                    assignment.priority === 5 || assignment.priority === 4 ? "bg-blue-600" :
+                    assignment.priority === 3 ? "bg-yellow-500" :
+                    "bg-green-500"
+                  
+                  const priorityBadgeColor =
+                    assignment.priority === 5 || assignment.priority === 4 ? "bg-red-100 text-red-700" :
+                    assignment.priority === 3 ? "bg-yellow-100 text-yellow-700" :
+                    "bg-green-100 text-green-700"
+
+                  return (
+                    <div
+                      key={assignment.id}
+                      className="flex items-start gap-0 border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-all bg-white"
+                    >
+                      <div className={`w-1 ${priorityColor}`}></div>
+                      <div className="flex-1 p-5">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 space-y-3">
+                            <h3 className="font-bold text-slate-900 text-lg">{assignment.incident_title}</h3>
                             {assignment.description && (
-                              <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{assignment.description}</p>
+                              <p className="text-sm text-slate-600">{assignment.description}</p>
+                            )}
+                            <div className="flex flex-wrap gap-4 text-sm text-slate-600">
+                              <div>
+                                <span className="font-medium">Location:</span> {assignment.location}
+                              </div>
+                              {assignment.category && (
+                                <div>
+                                  <span className="font-medium">Category:</span> {assignment.category}
+                                </div>
+                              )}
+                              {assignment.priority_label && (
+                                <div>
+                                  <span className="font-medium">Priority:</span>{" "}
+                                  <span className={`px-2 py-1 rounded text-xs font-medium ${priorityBadgeColor}`}>
+                                    {assignment.priority_label}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-4 text-sm text-slate-500 pt-2 border-t border-slate-200">
+                              {assignment.created_at && (
+                                <div>
+                                  <span className="font-medium">Assigned:</span> {new Date(assignment.created_at).toLocaleString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </div>
+                              )}
+                              <div>
+                                <span className="font-medium">Due:</span> {new Date(assignment.scheduled_time).toLocaleString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 flex-shrink-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="border-slate-900 text-slate-900 hover:bg-slate-50"
+                            >
+                              View Details
+                            </Button>
+                            {assignment.status === "scheduled" && (
+                              <Button
+                                size="sm"
+                                onClick={() => updateAssignmentStatus(assignment.id, "in-progress")}
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                              >
+                                Start Task
+                              </Button>
+                            )}
+                            {assignment.status === "in-progress" && (
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => {
+                                  setCompletionDialog({
+                                    isOpen: true,
+                                    assignmentId: assignment.id,
+                                    incidentId: assignment.incident_id,
+                                    incidentTitle: assignment.incident_title,
+                                  })
+                                }}
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                              >
+                                <CheckCircle2 className="h-4 w-4 mr-2" />
+                                Complete
+                              </Button>
+                            )}
+                            {assignment.status === "acknowledged" && (
+                              <Button
+                                size="sm"
+                                onClick={() => updateAssignmentStatus(assignment.id, "in-progress")}
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                              >
+                                Acknowledge
+                              </Button>
                             )}
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <span className="font-medium">Location:</span>
-                            <span>{assignment.location}</span>
-                          </div>
-                          {assignment.category && (
-                            <div className="flex items-center gap-1">
-                              <span className="font-medium">Category:</span>
-                              <span className="px-2 py-0.5 bg-primary/10 text-primary rounded">{assignment.category}</span>
-                            </div>
-                          )}
-                          {assignment.priority_label && (
-                            <div className="flex items-center gap-1">
-                              <span className="font-medium">Priority:</span>
-                              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                assignment.priority === 5 || assignment.priority === 4 ? "bg-red-100 text-red-700" :
-                                assignment.priority === 3 ? "bg-yellow-100 text-yellow-700" :
-                                "bg-green-100 text-green-700"
-                              }`}>
-                                {assignment.priority_label}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pt-1">
-                          {assignment.created_at && (
-                            <div>
-                              <span className="font-medium">Created:</span> {new Date(assignment.created_at).toLocaleString()}
-                            </div>
-                          )}
-                          <div>
-                            <span className="font-medium">Scheduled:</span> {new Date(assignment.scheduled_time).toLocaleString()}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 flex-shrink-0">
-                        {assignment.status === "scheduled" && (
-                          <Button
-                            size="sm"
-                            onClick={() => updateAssignmentStatus(assignment.id, "in-progress")}
-                          >
-                            Start
-                          </Button>
-                        )}
-                        {assignment.status === "in-progress" && (
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={() => {
-                              setCompletionDialog({
-                                isOpen: true,
-                                assignmentId: assignment.id,
-                                incidentId: assignment.incident_id,
-                                incidentTitle: assignment.incident_title,
-                              })
-                            }}
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-2" />
-                            Complete
-                          </Button>
-                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </CardContent>
