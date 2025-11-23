@@ -1033,3 +1033,4 @@ Usage: Header overlays, sticky navigation
 
 This document contains all UI details needed to create a world-class Figma design for the Smart Maintenance Incident Tracking & Prediction System. Use this as a reference for creating pixel-perfect designs that can be easily integrated into the Next.js application.
 
+
