@@ -1,7 +1,8 @@
 {
-  "name": "my-v0-project",
+  "name": "hawkeye",
   "version": "0.1.0",
   "private": true,
+  "description": "Hawkeye - Campus Incident Reporting System",
   "scripts": {
     "build": "next build",
     "dev": "next dev",
