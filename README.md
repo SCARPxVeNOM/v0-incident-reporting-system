@@ -285,14 +285,50 @@
 
 #### Technician Access
 - **URL**: `/technician/login`
-- **Email**: `john.smith@campus.com` (and others)
-- **Password**: `tech123`
+- All technicians use password: `tech123`
 
-*See `CREDENTIALS.txt` for complete list of test accounts*
+**Available Technician Accounts:**
+
+1. **Electrical Technician**
+   - Email: `john.smith@campus.com`
+   - Password: `tech123`
+   - Specialization: Electrical
+
+2. **Plumbing Technician**
+   - Email: `sarah.johnson@campus.com`
+   - Password: `tech123`
+   - Specialization: Plumbing
+
+3. **HVAC Technician**
+   - Email: `mike.davis@campus.com`
+   - Password: `tech123`
+   - Specialization: HVAC
+
+4. **IT Technician**
+   - Email: `emily.chen@campus.com`
+   - Password: `tech123`
+   - Specialization: IT
+
+5. **General Technician**
+   - Email: `david.wilson@campus.com`
+   - Password: `tech123`
+   - Specialization: General
 
 ---
 
 ## 🤖 ML Model Integration
+
+### Model Files
+
+The trained ML model files are available in the `model/` directory:
+
+- **`xgboost_advanced_model.joblib`** - Main XGBoost model for failure prediction (169MB)
+- **`scaler.joblib`** - Feature scaler for data normalization
+- **`target_encoder.joblib`** - Target encoder for categorical features
+- **`feature_info.joblib`** / **`feature_info.pkl`** - Feature metadata and information
+- **`optuna_study_advanced.pkl`** - Optuna hyperparameter optimization study
+- **`test_predictions_advanced.csv`** - Test predictions and evaluation results
+- **`feature_importance_advanced.png`** - Feature importance visualization
 
 ### BentoML Cloud API
 
@@ -300,6 +336,8 @@ The ML model is deployed on BentoML Cloud and accessible via REST API:
 
 - **Production Endpoint**: `https://failure-prediction-prod-0d460137.mt-guc1.bentoml.ai`
 - **Playground**: [BentoML Playground](https://service12.cloud.bentoml.com/deployments/failure-prediction-prod/playground)
+
+> **Note**: The model files in the repository can be used for local development or to deploy your own BentoML service. The production API uses the same model architecture.
 
 ### Prediction Request Format
 
