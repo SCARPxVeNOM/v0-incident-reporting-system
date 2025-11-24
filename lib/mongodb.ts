@@ -8,11 +8,9 @@ const uri: string = process.env.MONGODB_URI
 const dbName: string = process.env.MONGODB_DB_NAME || 'incident_reporting'
 
 // MongoDB connection options with SSL/TLS configuration
-// Required for MongoDB Atlas connections, especially on Windows
+// Adjusted for Vercel deployment compatibility
 const options: MongoClientOptions = {
-  tls: true,
-  tlsAllowInvalidCertificates: false,
-  tlsAllowInvalidHostnames: false,
+  // Let MongoDB driver handle TLS automatically based on connection string
   serverSelectionTimeoutMS: 30000,
   socketTimeoutMS: 60000,
   connectTimeoutMS: 30000,
