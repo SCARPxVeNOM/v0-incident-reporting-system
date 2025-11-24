@@ -7,11 +7,9 @@ if (!process.env.MONGODB_URI) {
 const uri: string = process.env.MONGODB_URI
 const dbName: string = process.env.MONGODB_DB_NAME || 'incident_reporting'
 
-// MongoDB connection options optimized for Vercel serverless functions
-const options: MongoClientOptions = {
-  // Minimal options - let driver handle defaults
-  maxPoolSize: 10,
-}
+// Serverless-optimized MongoDB connection for Vercel
+// No explicit TLS options - let the driver handle it automatically
+const options: MongoClientOptions = {}
 
 let client: MongoClient
 let clientPromise: Promise<MongoClient>
@@ -32,10 +30,13 @@ if (process.env.NODE_ENV === 'development') {
   }
   clientPromise = globalWithMongo._mongoClientPromise
 } else {
-  // In production mode, it's best to not use a global variable.
-  client = new MongoClient(uri, options)
+  // In production mode, use a fresh connection for serverless
+  // Reuse the client variable globally in the module scope
+  if (!client) {
+    client = new MongoClient(uri, options)
+  }
   clientPromise = client.connect().catch((error) => {
-    console.error('MongoDB connection error:', error)
+    console.error('MongoDB connection error in production:', error)
     throw error
   })
 }
