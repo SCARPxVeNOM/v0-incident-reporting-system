@@ -551,11 +551,6 @@ Documentation includes:
 - **DB Schema**: Detailed database documentation
 
 ---
-
-## 🤝 Contributing
-
-We welcome contributions! Here's how you can help:
-
 ### Contributors
 
 <table>
